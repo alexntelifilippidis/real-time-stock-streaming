@@ -56,17 +56,17 @@ status: ## Check status of all services
 
 producer: ## Run the Kafka producer
 	@echo "$(BLUE)Starting Kafka producer...$(NC)"
-	python src/kafka/producer.py
+	python kafka/producer.py
 
 consumer: ## Run the test consumer
 	@echo "$(BLUE)Starting test consumer...$(NC)"
-	python src/kafka/consumer_test.py
+	python kafka/consumer_test.py
 
 spark: ## Run Spark streaming job
 	@echo "$(BLUE)Starting Spark streaming...$(NC)"
 	spark-submit \
 		--packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.3.0 \
-		src/spark/spark_streaming.py
+		spark/spark_streaming.py
 
 test: ## Run tests
 	@echo "$(BLUE)Running tests...$(NC)"
