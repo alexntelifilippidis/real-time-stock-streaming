@@ -1,4 +1,4 @@
-.PHONY: help install dev-install clean up down restart logs producer consumer spark test format lint check all
+.PHONY: help install dev-install clean up down restart logs producer consumer spark test format lint check all nuke podman-start
 
 # Colors for output
 BLUE := \033[0;34m
@@ -28,7 +28,18 @@ clean: ## Clean up Python cache files and checkpoints
 	rm -rf checkpoints/ spark-warehouse/ metastore_db/ derby.log
 	@echo "$(GREEN)Cleanup complete!$(NC)"
 
-up: ## Start all services (Kafka, Zookeeper, PostgreSQL)
+podman-start: ## Ensure Podman machine is running
+	@echo "$(BLUE)Checking Podman machine status...$(NC)"
+	@if ! podman machine list | grep -q "Currently running"; then \
+		echo "$(YELLOW)Podman machine not running. Starting...$(NC)"; \
+		podman machine start || true; \
+		echo "$(BLUE)Waiting for Podman machine to be ready...$(NC)"; \
+		sleep 10; \
+	else \
+		echo "$(GREEN)Podman machine is already running$(NC)"; \
+	fi
+
+up: podman-start ## Start all services (Kafka, Zookeeper, PostgreSQL)
 	@echo "$(BLUE)Starting services...$(NC)"
 	podman-compose up -d
 	@echo "$(GREEN)Services started! Waiting for healthy status...$(NC)"
@@ -39,6 +50,22 @@ down: ## Stop all services
 	@echo "$(YELLOW)Stopping services...$(NC)"
 	podman-compose down
 	@echo "$(GREEN)Services stopped!$(NC)"
+
+nuke: ## Destroy all containers, images, and volumes (WARNING: destructive!)
+	@echo "$(YELLOW)⚠️  WARNING: This will destroy ALL Podman containers, images, and volumes!$(NC)"
+	@echo "$(YELLOW)Press Ctrl+C within 5 seconds to cancel...$(NC)"
+	@sleep 5
+	@echo "$(YELLOW)Stopping all containers...$(NC)"
+	podman stop -a 2>/dev/null || true
+	@echo "$(YELLOW)Removing all containers...$(NC)"
+	podman rm -a -f 2>/dev/null || true
+	@echo "$(YELLOW)Removing all images...$(NC)"
+	podman rmi -a -f 2>/dev/null || true
+	@echo "$(YELLOW)Removing all volumes...$(NC)"
+	podman volume rm -a -f 2>/dev/null || true
+	@echo "$(YELLOW)Pruning system...$(NC)"
+	podman system prune -a -f --volumes 2>/dev/null || true
+	@echo "$(GREEN)✓ Everything destroyed! System reset complete.$(NC)"
 
 restart: down up ## Restart all services
 

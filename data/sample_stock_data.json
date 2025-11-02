@@ -1,0 +1,33 @@
+[
+  {
+    "symbol": "AAPL",
+    "timestamp": "2025-11-02T10:00:00",
+    "price": 175.50,
+    "volume": 1250000,
+    "high": 176.25,
+    "low": 174.80,
+    "open": 175.00,
+    "close": 175.50
+  },
+  {
+    "symbol": "GOOGL",
+    "timestamp": "2025-11-02T10:00:00",
+    "price": 140.75,
+    "volume": 980000,
+    "high": 141.20,
+    "low": 140.30,
+    "open": 140.50,
+    "close": 140.75
+  },
+  {
+    "symbol": "MSFT",
+    "timestamp": "2025-11-02T10:00:00",
+    "price": 380.25,
+    "volume": 1100000,
+    "high": 381.00,
+    "low": 379.50,
+    "open": 380.00,
+    "close": 380.25
+  }
+]
+
