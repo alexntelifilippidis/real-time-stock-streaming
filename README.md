@@ -3,54 +3,52 @@
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
 [![Apache Kafka](https://img.shields.io/badge/Apache%20Kafka-3.0%2B-black.svg)](https://kafka.apache.org/)
 [![Apache Spark](https://img.shields.io/badge/Apache%20Spark-3.3%2B-orange.svg)](https://spark.apache.org/)
-[![Docker](https://img.shields.io/badge/Podman-4.0%2B-892CA0.svg)](https://www.podman.io/)
+[![Podman](https://img.shields.io/badge/Podman-4.0%2B-892CA0.svg)](https://www.podman.io/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-A production-ready, real-time data streaming pipeline that demonstrates end-to-end data engineering using **Apache Kafka** and **Apache Spark Structured Streaming**. This project simulates live stock market data, processes it in real-time, and provides actionable analytics.
+A production-ready, real-time data streaming pipeline that demonstrates end-to-end data engineering using **Apache Kafka** and **Apache Spark Structured Streaming**. This project simulates live stock market data, processes it in real-time with Pydantic validation, and provides beautiful colored logging.
 
 ## 🎯 Key Features
 
 - ⚡ **Real-time Processing**: Sub-second latency streaming with Kafka and Spark
+- 🎨 **Beautiful Logging**: Colored, emoji-rich logs with custom formatter
+- ✅ **Pydantic Validation**: Type-safe data models with automatic validation
 - 📊 **Scalable Architecture**: Horizontally scalable components using Podman
 - 🔄 **Fault Tolerance**: Automatic recovery and checkpointing
-- 📈 **Live Analytics**: Real-time aggregations and windowing operations
 - 🐳 **Easy Deployment**: Full Podman Compose setup for local development
-- 📝 **Production Ready**: Logging, monitoring, and error handling included
+- 📝 **Production Ready**: Comprehensive logging, monitoring, and error handling
 
 ## 🏗️ Architecture
 
 ```
 ┌─────────────────┐      ┌─────────────────┐      ┌─────────────────┐
 │  Data Generator │ ───▶ │  Apache Kafka   │ ───▶ │  Spark Stream   │
-│  (Python)       │      │  (Topic: stock) │      │  (PySpark)      │
+│  (Pydantic)     │      │  (5 Partitions) │      │  (PySpark)      │
 └─────────────────┘      └─────────────────┘      └─────────────────┘
-                                                            │
-                                                            ▼
-┌─────────────────┐      ┌─────────────────┐      ┌─────────────────┐
-│   Dashboard     │ ◀─── │   PostgreSQL    │ ◀─── │  Aggregations   │
-│ (Streamlit)     │      │   (Storage)     │      │  (Processing)   │
-└─────────────────┘      └─────────────────┘      └─────────────────┘
+         │                        │                         │
+         │                        │                         │
+    Validates              Key-based                   Real-time
+    with Schema          Partitioning                Aggregations
 ```
 
 **Data Flow:**
-1. 🎲 **Producer** generates realistic stock price data (AAPL, GOOGL, MSFT, AMZN, etc.)
-2. 📨 **Kafka** ingests and buffers messages in the `stock_prices` topic
+1. 🎲 **Producer** generates realistic stock price data with Pydantic validation
+2. 📨 **Kafka** ingests messages with stock symbol as partition key (ordering guarantee)
 3. ⚡ **Spark Structured Streaming** consumes and processes data with windowed aggregations
-4. 💾 **PostgreSQL** stores processed results for persistence
-5. 📊 **Streamlit Dashboard** visualizes real-time trends and analytics
+4. 📊 **Kafka UI** visualizes topics, partitions, and offsets in real-time
 
 ## 🛠️ Tech Stack
 
 | Layer | Technology | Purpose |
 |-------|-----------|---------|
-| 🔄 **Streaming** | Apache Kafka | High-throughput message broker |
+| 🔄 **Streaming** | Apache Kafka (KRaft mode) | High-throughput message broker |
 | ⚡ **Processing** | Apache Spark (Structured Streaming) | Real-time stream processing |
-| 🗃️ **Storage** | PostgreSQL | Relational database for analytics |
 | 🐍 **Language** | Python 3.8+ | Main implementation language |
-| 📦 **Libraries** | PySpark, kafka-python, pandas | Data processing |
-| 📊 **Visualization** | Streamlit | Interactive dashboards |
-| 🐳 **Infrastructure** | Docker & Podman Compose | Containerization |
-| 🔍 **Monitoring** | Prometheus + Grafana (planned) | Metrics and observability |
+| ✅ **Validation** | Pydantic 2.0+ | Data modeling and validation |
+| 📦 **Libraries** | kafka-python, PySpark | Data processing |
+| 🔧 **Package Manager** | uv | Fast Python package manager |
+| 🐳 **Infrastructure** | Podman Compose | Containerization |
+| 🎨 **Logging** | Custom ColoredFormatter | Beautiful terminal output |
 
 ## 📁 Project Structure
 
@@ -60,47 +58,44 @@ real-time-stock-streaming/
 ├── README.md                      # This file
 ├── LICENSE                        # MIT License
 ├── .gitignore                     # Git ignore rules
-├── podman-compose.yml             # Container services configuration
-├── pyproject.toml               # Python dependencies
+├── docker-compose.yml             # Podman services configuration
+├── pyproject.toml                 # Python dependencies (uv)
+├── Makefile                       # Convenient commands
 │
-├── kafka/                         # Kafka producer/consumer
-│   ├── producer.py               # Stock data generator
-│   ├── consumer_test.py          # Test consumer for validation
-│   └── config.py                 # Kafka configuration
+├── src/                           # Source code
+│   ├── main.py                    # Main entry point
+│   │
+│   ├── kafka/                     # Kafka components
+│   │   ├── model.py               # Pydantic data models (StockRecord)
+│   │   ├── producer.py            # Stock data producer with logging
+│   │   ├── topic_manager.py       # Topic management (create/describe/delete)
+│   │   └── demo_partitions.py     # Demo script for partitions/offsets
+│   │
+│   ├── logger/                    # Custom logging system
+│   │   ├── __init__.py            # Package exports
+│   │   ├── models.py              # Pydantic models for logger config
+│   │   └── logger.py              # ColoredFormatter and KafkaModelLogger
+│   │
+│   ├── spark/                     # Spark streaming jobs
+│   │   └── (coming soon)          # Spark streaming application
+│   │
+│   └── data/                      # Data directory
+│       └── .gitkeep               # Placeholder
 │
-├── spark/                         # Spark streaming jobs
-│   ├── spark_streaming.py        # Main streaming application
-│   ├── aggregations.py           # Aggregation logic
-│   └── utils/
-│       ├── schema.py             # Data schemas
-│       └── helpers.py            # Utility functions
+├── docs/                          # Documentation
+│   └── KAFKA_PARTITIONS_OFFSETS.md  # Partition/offset guide
 │
-├── database/                      # Database scripts
-│   ├── init.sql                  # PostgreSQL initialization
-│   └── queries.sql               # Sample queries
-│
-├── dashboard/                     # Streamlit dashboard
-│   ├── app.py                    # Main dashboard app
-│   └── components/               # UI components
-│
-├── data/                          # Sample and test data
-│   └── sample_stock_data.json    # Example data
-│
-├── notebooks/                     # Jupyter notebooks
-│   └── exploration.ipynb         # Data exploration
-│
-└── tests/                         # Unit tests
-    ├── test_producer.py
-    └── test_streaming.py
+└── .github/                       # GitHub templates
+    └── pull_request_template.md  # PR template
 ```
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- **Podman** 4.0+ and **Podman Compose** 2.0+
+- **Podman** 4.0+ and **podman-compose** 2.0+
 - **Python** 3.8 or higher
-- **Git** for cloning the repository
+- **uv** package manager (`brew install uv` or `pip install uv`)
 - At least 4GB RAM available for containers
 
 ### Installation
@@ -111,159 +106,191 @@ real-time-stock-streaming/
    cd real-time-stock-streaming
    ```
 
-2. **Start the infrastructure** (Kafka, Zookeeper, PostgreSQL)
+2. **Install dependencies with uv**
    ```bash
-   podman-compose up -d
+   make install
+   # or manually: uv sync
+   ```
+
+3. **Start the infrastructure** (Kafka + Kafka UI)
+   ```bash
+   make up
    ```
    
-   Wait for services to be healthy (~30 seconds):
+   Wait for services to be healthy (~30 seconds). Check status:
    ```bash
-   podman-compose ps
+   make status
    ```
 
-3. **Create Python virtual environment**
+4. **Create Kafka topic with 5 partitions**
    ```bash
-   python -m venv venv
-   source venv/bin/activate  # On macOS/Linux
-   # venv\Scripts\activate   # On Windows
-   ```
-
-4. **Install dependencies**
-   ```bash
-   uv sync
-   ```
-
-5. **Initialize the database**
-   ```bash
-   podman-compose exec postgres psql -U postgres -d stocks -f /docker-entrypoint-initdb.d/init.sql
+   make topic-create PARTITIONS=5
    ```
 
 ### Running the Pipeline
 
-**Terminal 1 - Start Kafka Producer:**
+**Start Kafka Producer:**
 ```bash
-python kafka/producer.py
+make producer
+# or: python src/kafka/producer.py
 ```
 
-**Terminal 2 - Start Spark Streaming:**
-```bash
-spark-submit \
-  --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.3.0 \
-  spark/spark_streaming.py
+You'll see beautiful colored logs:
+```
+2025-11-02 10:50:08 - StockProducer - ✨ INFO - Connecting to Kafka at localhost:9092
+2025-11-02 10:50:08 - StockProducer - ✨ INFO - ✅ Successfully connected to Kafka broker
+2025-11-02 10:50:08 - StockProducer - ✨ INFO - 🚀 Starting stock data stream (interval=1.0s)
+2025-11-02 10:50:09 - StockProducer - ✨ INFO - ✅ AAPL   | $150.23 | Vol:  5,234 | 📍 Partition: 1 | 📌 Offset: 42
+2025-11-02 10:50:10 - StockProducer - ✨ INFO - ✅ GOOGL  | $140.75 | Vol:  8,192 | 📍 Partition: 2 | 📌 Offset: 38
 ```
 
-**Terminal 3 - Launch Dashboard:**
-```bash
-streamlit run dashboard/app.py
-```
-
-Visit `http://localhost:8501` to see real-time analytics! 📊
+**View Kafka UI:**
+- Open `http://localhost:8080` in your browser
+- Navigate to **Topics** → **stock_prices**
+- See messages, partitions, and offsets in real-time!
 
 ## 📊 Features in Detail
 
-### Stock Data Generator
-- Simulates realistic stock prices with random walks
-- Configurable symbols, frequency, and volatility
-- Timestamps with microsecond precision
-- Volume and market cap metadata
+### Stock Data Producer (`src/kafka/producer.py`)
+- ✅ **Pydantic Validation**: Every message validated with `StockRecord` model
+- 🎨 **Beautiful Logging**: Colored output with emojis for success/error
+- 🔑 **Partition Keys**: Uses stock symbol as key for consistent partitioning
+- 📊 **Statistics**: Progress tracking every 10 messages
+- 🛑 **Graceful Shutdown**: Ctrl+C handling with proper cleanup
+- 🔄 **Context Manager**: Clean resource management
 
-### Stream Processing
-- **Windowed Aggregations**: 1-minute, 5-minute, 15-minute windows
-- **Stateful Operations**: Running averages, min/max tracking
-- **Watermarking**: Handles late-arriving data
-- **Checkpointing**: Fault-tolerant state management
-
-### Analytics
-- Real-time price trends
-- Volume-weighted average price (VWAP)
-- Price change percentages
-- Moving averages (SMA, EMA)
-
-## 🧪 Testing
-
-Run unit tests:
-```bash
-pytest tests/
+### Pydantic Models (`src/kafka/model.py`)
+```python
+class StockRecord(BaseModel):
+    symbol: Literal["AAPL", "GOOGL", "AMZN", "MSFT", "TSLA", "META", "NFLX"]
+    price: float  # Must be > 0
+    volume: int   # Must be >= 0
+    timestamp: float  # Auto-generated Unix timestamp
 ```
 
-Test Kafka producer independently:
+### Custom Logger (`src/logger/`)
+- 🎨 **ANSI Colors**: Beautiful terminal output with color coding
+- 😀 **Emojis**: Visual indicators for different log levels
+- 🏗️ **Modular Design**: Separate models and logger implementation
+- 🔒 **Frozen Models**: Immutable configuration with Pydantic
+
+**Log Levels:**
+- 🔍 DEBUG (cyan)
+- ✨ INFO (green)
+- ⚠️ WARNING (yellow)
+- ❌ ERROR (red)
+- 🚨 CRITICAL (magenta)
+
+## 🧪 Testing & Tools
+
+### Topic Management
 ```bash
-python kafka/consumer_test.py
+# Create topic with custom partitions
+make topic-create PARTITIONS=10
+
+# Describe topic (shows partition and offset info)
+make topic-describe
+
+# List all topics
+make topic-list
+
+# Delete topic
+make topic-delete
 ```
 
-## 🐳 Docker Services
+### Demo Scripts
+```bash
+# Run partition/offset demonstration
+python src/kafka/demo_partitions.py
+```
+
+## 🐳 Podman Services
 
 | Service | Port | Description |
 |---------|------|-------------|
-| Zookeeper | 2181 | Kafka coordination |
-| Kafka | 9092 | Message broker |
-| PostgreSQL | 5432 | Database (user: `postgres`, db: `stocks`) |
-| Adminer | 8080 | Database UI |
+| Kafka | 9092 | Message broker (KRaft mode, 5 partitions) |
+| Kafka UI | 8080 | Web UI for Kafka management |
 
-Access Adminer at `http://localhost:8080` for database management.
+Access Kafka UI at `http://localhost:8080` to:
+- View topics and messages
+- See partition distribution
+- Track consumer offsets
+- Monitor cluster health
 
-## 🔧 Configuration
+## 🔧 Makefile Commands
 
-Key configuration files:
-
-- `kafka/config.py` - Kafka broker settings, topics
-- `spark/config.py` - Spark session config, checkpoints
-- `podman-compose.yml` - Infrastructure setup
-- `.env` - Environment variables (create from `.env.example`)
-
-## 📈 Monitoring & Observability
-
-**Logs:**
 ```bash
-# Kafka logs
-podman-compose logs -f kafka
-
-# View all services
-podman-compose logs -f
+make help           # Show all available commands
+make install        # Install Python dependencies
+make dev-install    # Install with dev dependencies (pytest, ruff, mypy)
+make up             # Start Podman services
+make down           # Stop services
+make restart        # Restart services
+make nuke           # Destroy all containers/images (⚠️  destructive!)
+make producer       # Run Kafka producer
+make topic-create   # Create Kafka topic
+make topic-describe # Show partition info
+make clean          # Clean Python cache files
+make status         # Check service status
 ```
 
-**Metrics** (coming soon):
-- Kafka message throughput
-- Spark processing latency
-- Consumer lag monitoring
+## 📚 Understanding Kafka Partitions & Offsets
+
+**Partitions**: Like highway lanes - messages are distributed across them for parallel processing.
+- Your producer uses **stock symbol as partition key**
+- This ensures all AAPL messages go to the same partition
+- Provides **ordering guarantee** per symbol
+
+**Offsets**: Sequential IDs for messages within each partition
+- Start at 0 and increment
+- Act as bookmarks for tracking position
+- Enable fault-tolerant consumption
+
+See `docs/KAFKA_PARTITIONS_OFFSETS.md` for detailed explanation.
 
 ## 🛠️ Troubleshooting
 
+**Podman machine not running:**
+```bash
+make up  # Automatically starts Podman machine
+```
+
 **Kafka connection refused:**
 ```bash
-# Ensure Kafka is running
-podman-compose ps kafka
-# Restart if needed
-podman-compose restart kafka
+# Check Kafka status
+make status
+# Restart Kafka
+make restart
 ```
 
-**Spark can't find packages:**
+**Import errors:**
 ```bash
-# Include Kafka package explicitly
-spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.3.0 spark/spark_streaming.py
+# Ensure dependencies are installed
+uv sync
 ```
 
-**Database connection errors:**
+**View logs:**
 ```bash
-# Check PostgreSQL status
-podman-compose exec postgres pg_isready
+# All services
+podman-compose logs -f
+# Just Kafka
+podman-compose logs -f kafka
 ```
 
 ## 🚀 Future Enhancements
 
-- [ ] 🔐 **Schema Registry**: Integrate Confluent Schema Registry for schema evolution
-- [ ] 🧠 **ML Integration**: Anomaly detection with streaming ML models
-- [ ] ☁️ **Cloud Deployment**: AWS (MSK + EMR) or GCP (Pub/Sub + Dataflow)
-- [ ] 📊 **Advanced Dashboards**: Grafana with Prometheus metrics
-- [ ] 🔒 **Security**: SASL/SSL authentication for Kafka
-- [ ] 📦 **Kubernetes**: Helm charts for K8s deployment
-- [ ] 🧪 **Integration Tests**: End-to-end pipeline testing
-- [ ] 📝 **Data Catalog**: Metadata management with Apache Atlas
-- [ ] 🌊 **CDC Integration**: Change data capture from transactional databases
+- [ ] ⚡ **Spark Streaming**: Real-time aggregations and windowing
+- [ ] 💾 **PostgreSQL**: Store processed results
+- [ ] 📊 **Streamlit Dashboard**: Live visualization
+- [ ] 🔐 **Schema Registry**: Schema evolution support
+- [ ] 🧠 **ML Integration**: Anomaly detection
+- [ ] ☁️ **Cloud Deployment**: AWS MSK or GCP Pub/Sub
+- [ ] 🔒 **Security**: SASL/SSL authentication
+- [ ] 📈 **Monitoring**: Prometheus + Grafana
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please:
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
@@ -271,20 +298,23 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
+Use the PR template in `.github/pull_request_template.md`
+
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-
 ## 🙏 Acknowledgments
 
 - Apache Software Foundation for Kafka and Spark
-- The open-source community for excellent documentation
-- Stock market APIs for inspiration
+- Pydantic team for excellent data validation
+- The open-source community
 
 ---
 
 ⭐ **Star this repo** if you found it helpful!  
 🐛 **Found a bug?** [Open an issue](https://github.com/your-username/real-time-stock-streaming/issues)  
 💡 **Have ideas?** [Start a discussion](https://github.com/your-username/real-time-stock-streaming/discussions)
+
+**Made with ❤️ and ☕ by Data Engineers, for Data Engineers**
 
